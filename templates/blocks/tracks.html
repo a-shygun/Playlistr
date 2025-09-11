@@ -1,0 +1,141 @@
+<div class="tracks">
+  {% if user %}
+    <div class="explain style card">
+      <h2><span style="font-size: 1.8em; font-weight: bold;">Your Activity</span></h2>
+      <p>
+        <span style="font-size: 1em;">Each track includes</span>  
+        <span style="font-size: 1.2em; font-style: italic; font-weight: bold; color: var(--primary-dark)">details</span>,
+        <span style="font-size: 1.2em; font-style: italic; font-weight: bold; color: var(--primary-dark)">genres</span>, and
+        <span style="font-size: 1.2em; font-style: italic; font-weight: bold; color: var(--primary-dark)">recommendations</span>  
+        <span style="font-size: 1em;">to help you explore more music you’ll love.</span>
+      </p>
+    </div>
+    <div class="music-col-toggle style card">
+      <input type="checkbox" id="switch" />
+      <label for="switch">
+        <span class="yes">Top Songs</span>
+        <span class="no">Recent Songs</span>
+        <div class="slider style card"></div>
+      </label>
+    </div>
+
+
+    <div class="music-cols top-songs">
+      {% for track in top_tracks %}
+      <div class="record style card">
+        <div class="main">
+          <a class="image style" href="{{ track.album_url }}">
+            <img src="{{ track.img }}" alt="">
+          </a>
+
+          <div class="details-div">
+            <div class="top">
+              <a href="{{ track.url }}"><h3>{{ track.name }}</h3></a>
+              <a href="{{ track.artist_url }}"><h4>{{ track.artist }}</h4></a>
+              <a href="{{ track.album_url }}"><h5>{{ track.album }}</h5></a>
+            </div>
+
+            <button class="toggle-more style btn">▼ See More</button>
+          </div>
+        </div>
+
+        <div class="expandable">
+          <div class="genres-row">
+            {% if track.genre %}
+              {% for i in track.genre %}
+                <a class="style link" href="https://www.google.com/search?q={{ i | urlencode }}" target="_blank">{{ i }}</a>
+              {% endfor %}
+            {% else %}
+              <a class="style link" href="https://www.google.com/search?q={{ track.artist | urlencode }}" target="_blank">{{ track.artist }}</a>
+            {% endif %}
+          </div>
+
+          <div class="similar-row">
+            {% if track.similar_songs %}
+              {% for s in track.similar_songs %}
+              <div class="similar-song">
+                <h4><a href="https://www.google.com/search?q={{ (s.name + ' - ' + s.artist)|urlencode }}" target="_blank">{{ s.name }}</a></h4>
+                <p><a href="https://www.google.com/search?q={{ (s.name + ' - ' + s.artist)|urlencode }}" target="_blank">{{ s.artist }}</a></p>
+              </div>
+              {% endfor %}
+            {% else %}
+              <p>Couldn't find similar songs. <a class="style link" href="https://www.google.com/search?q={{ (track.name + ' - ' + track.artist)|urlencode }}" target="_blank">Search Google</a></p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="music-cols recent-songs">
+      {% for track in recent_tracks %}
+      <div class="record style card">
+        <div class="main">
+          <a class="image style" href="{{ track.album_url }}">
+            <img src="{{ track.img }}" alt="">
+          </a>
+
+          <div class="details-div">
+            <div class="top">
+              <a href="{{ track.url }}"><h3>{{ track.name }}</h3></a>
+              <a href="{{ track.artist_url }}"><h4>{{ track.artist }}</h4></a>
+              <a href="{{ track.album_url }}"><h5>{{ track.album }}</h5></a>
+            </div>
+
+            <button class="toggle-more style btn">▼ See More</button>
+          </div>
+        </div>
+
+        <div class="expandable">
+          <div class="genres-row">
+            {% if track.genre %}
+              {% for i in track.genre %}
+                <a class="style link" href="https://www.google.com/search?q={{ i | urlencode }}" target="_blank">{{ i }}</a>
+              {% endfor %}
+            {% else %}
+              <a class="style link" href="https://www.google.com/search?q={{ track.artist | urlencode }}" target="_blank">{{ track.artist }}</a>
+            {% endif %}
+          </div>
+
+          <div class="similar-row">
+            {% if track.similar_songs %}
+              {% for s in track.similar_songs %}
+              <div class="similar-song">
+                <h4><a href="https://www.google.com/search?q={{ (s.name + ' - ' + s.artist)|urlencode }}" target="_blank">{{ s.name }}</a></h4>
+                <p><a href="https://www.google.com/search?q={{ (s.name + ' - ' + s.artist)|urlencode }}" target="_blank">{{ s.artist }}</a></p>
+              </div>
+              {% endfor %}
+            {% else %}
+              <p>Couldn't find similar songs. <a class="style link" href="https://www.google.com/search?q={{ (track.name + ' - ' + track.artist)|urlencode }}" target="_blank">Search Google</a></p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  {% else %}
+  <div class="explain style card">
+    <h2><span style="font-size: 1.8em; font-weight: bold;">Your Activity</span></h2>
+    <p>
+      <span style="font-size: 1em;">Each track includes</span>  
+      <span style="font-size: 1.2em; font-style: italic; font-weight: bold; color: var(--primary-dark)">details</span>,
+      <span style="font-size: 1.2em; font-style: italic; font-weight: bold; color: var(--primary-dark)">genres</span>, and
+      <span style="font-size: 1.2em; font-style: italic; font-weight: bold; color: var(--primary-dark)">recommendations</span>  
+      <span style="font-size: 1em;">to help you explore more music you’ll love.</span>
+    </p>
+  </div>
+  <div class="music-col-toggle style card">
+    <input type="checkbox" id="switch" />
+    <label for="switch">
+      <span class="yes">Top Songs</span>
+      <span class="no">Recent Songs</span>
+      <div class="slider style card"></div>
+    </label>
+  </div>
+  <div class="gap"></div>
+
+  <div class="login style btn active">
+      <a href="/login">Login</a>
+  </div>
+  {% endif %}
+</div>
