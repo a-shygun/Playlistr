@@ -1,4 +1,3 @@
-from config import CLIENT_ID, REDIRECT_URI, SCOPES
 import secrets
 import hashlib
 import base64
@@ -7,7 +6,13 @@ import os
 import json
 from flask import Blueprint, session, redirect, request
 
-TOKEN_CACHE = ".venv/temp/.spotify_token_cache.json"
+# SPOTIPY_CLIENT_ID = "35d3c6267f8249bb97d537ce1b40b0a8"
+SPOTIPY_CLIENT_ID = os.getenv("SPOTIPY_CLIENT_ID")
+
+REDIRECT_URI = "http://127.0.0.1:5000/callback"
+SCOPES = "user-read-private user-read-email user-top-read user-read-recently-played"
+
+TOKEN_CACHE = "temp/.spotify_token_cache.json"
 auth_bp = Blueprint('auth', __name__)
 
 
@@ -26,7 +31,7 @@ def generate_code_challenge(verifier):
 
 def build_auth_url(code_challenge):
     params = {
-        "client_id": CLIENT_ID,
+        "client_id": SPOTIPY_CLIENT_ID,
         "response_type": "code",
         "redirect_uri": REDIRECT_URI,
         "scope": SCOPES,
@@ -44,7 +49,7 @@ def exchange_code_for_token(code: str, code_verifier: str) -> str:
     response = requests.post(
         "https://accounts.spotify.com/api/token",
         data={
-            "client_id": CLIENT_ID,
+            "client_id": SPOTIPY_CLIENT_ID,
             "grant_type": "authorization_code",
             "code": code,
             "redirect_uri": REDIRECT_URI,

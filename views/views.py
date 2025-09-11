@@ -8,12 +8,14 @@ import pycountry
 
 
 views_bp = Blueprint('views', __name__)
-CACHE_FILE = ".venv/temp/profile_cache.json"
+CACHE_FILE = "temp/profile_cache.json"
 CACHE_TTL = 90000
 
 
-load_dotenv(".venv/secure/tokens.env")
-LASTFM_API_KEY = os.getenv("LASTFM_API_KEY")
+# load_dotenv(".venv/secure/tokens.env")
+# LASTFM_API_KEY = os.getenv("LASTFM_API_KEY"
+LASTFM_API_KEY = os.environ.get("LASTFM_API_KEY")
+
 if not LASTFM_API_KEY:
     raise ValueError("LASTFM_API_KEY not found in env")
 print(f"[Env] LASTFM_API_KEY loaded: {'Yes' if LASTFM_API_KEY else 'No'}")
