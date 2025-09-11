@@ -8,7 +8,8 @@ import requests
 from flask import Blueprint, session, redirect, request
 
 SPOTIPY_CLIENT_ID = os.environ.get("SPOTIPY_CLIENT_ID")
-REDIRECT_URI = "http://127.0.0.1:5000/callback"
+REDIRECT_URI = os.environ.get("REDIRECT_URI")
+# REDIRECT_URI = "http://127.0.0.1:5000/callback"
 SCOPES = "user-read-private user-read-email user-top-read user-read-recently-played"
 
 auth_bp = Blueprint('auth', __name__)
