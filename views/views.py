@@ -1,99 +1,84 @@
-from flask import Blueprint, session, render_template
-import os, json
-from time import time
-from dotenv import load_dotenv
-import requests
-from .spotify_lastfm import fetch_tracks_with_genres_and_similar
-import pycountry
 
+from flask import Blueprint, session, render_template
+import os, json, requests
+from time import time
+import pycountry
+from .spotify_lastfm import fetch_tracks_with_genres_and_similar
 
 views_bp = Blueprint('views', __name__)
-CACHE_FILE = "temp/profile_cache.json"
-CACHE_TTL = 90000
+CACHE_DIR = "temp"
+CACHE_TTL = 3600
 
-
-# load_dotenv(".venv/secure/tokens.env")
-# LASTFM_API_KEY = os.getenv("LASTFM_API_KEY"
 LASTFM_API_KEY = os.environ.get("LASTFM_API_KEY")
-
 if not LASTFM_API_KEY:
     raise ValueError("LASTFM_API_KEY not found in env")
-print(f"[Env] LASTFM_API_KEY loaded: {'Yes' if LASTFM_API_KEY else 'No'}")
 
+os.makedirs(CACHE_DIR, exist_ok=True)
 
-def load_cache():
-    print("[Cache] Attempting to load cache")
-    if os.path.exists(CACHE_FILE):
-        with open(CACHE_FILE, "r") as f:
+def get_cache_file(user_id):
+    return os.path.join(CACHE_DIR, f"user_cache_{user_id}.json")
+
+def load_cache(user_id):
+    path = get_cache_file(user_id)
+    if os.path.exists(path):
+        with open(path, "r") as f:
             try:
                 data = json.load(f)
                 if time() - data.get("timestamp", 0) < CACHE_TTL:
-                    print("[Cache] Cache hit")
                     return data
-                else:
-                    print("[Cache] Cache expired")
             except json.JSONDecodeError:
-                print("[Cache] Cache file is corrupted")
-    else:
-        print("[Cache] No cache file found")
+                pass
     return None
 
-def save_cache(user, top_tracks, recent_tracks):
-    print("[Cache] Saving cache")
-    with open(CACHE_FILE, "w") as f:
-        json.dump({
-            "timestamp": time(),
-            "user": user,
-            "top_tracks": top_tracks,
-            "recent_tracks": recent_tracks
-        }, f)
-    print("[Cache] Cache saved successfully")
+def save_cache(user_id, user_data, top_tracks, recent_tracks, token=None):
+    path = get_cache_file(user_id)
+    cache_data = {
+        "timestamp": time(),
+        "user": user_data,
+        "top_tracks": top_tracks,
+        "recent_tracks": recent_tracks
+    }
+    if token:
+        cache_data["access_token"] = token
+    with open(path, "w") as f:
+        json.dump(cache_data, f)
 
+def delete_cache(user_id):
+    path = get_cache_file(user_id)
+    if os.path.exists(path):
+        os.remove(path)
 
 def get_user_info(token):
-    print("[Spotify] Fetching user info from Spotify API")
-
     headers = {"Authorization": f"Bearer {token}"}
-
-    
     res = requests.get("https://api.spotify.com/v1/me", headers=headers)
     if res.status_code != 200:
-        print(f"[Spotify] Failed to fetch user info, status={res.status_code}")
         return None
+
     data = res.json()
-
-    
-    total_playlists = 0
-    total_playlist_tracks = 0
+    total_playlists, total_playlist_tracks = 0, 0
     next_url = "https://api.spotify.com/v1/me/playlists?limit=50"
-
     while next_url:
         playlists_res = requests.get(next_url, headers=headers)
         if playlists_res.status_code != 200:
             break
         playlists_data = playlists_res.json()
-
         total_playlists = playlists_data.get("total", 0)
         for pl in playlists_data.get("items", []):
             total_playlist_tracks += pl["tracks"]["total"]
+        next_url = playlists_data.get("next")
 
-        next_url = playlists_data.get("next")  
-
-    
     liked_res = requests.get("https://api.spotify.com/v1/me/tracks?limit=1", headers=headers)
     liked_total = liked_res.json().get("total", 0) if liked_res.status_code == 200 else 0
 
-    
     country_code = data.get("country")
     country_name = pycountry.countries.get(alpha_2=country_code).name if country_code else None
 
-    
-    user_info = {
+    return {
         "name": data.get("display_name"),
         "email": data.get("email"),
         "img": data.get("images")[0]["url"] if data.get("images") else None,
         "country": country_name,
-        "product": data.get("product"),  
+        "product": data.get("product"),
         "followers": data.get("followers", {}).get("total", 0),
         "spotify_link": data.get("external_urls", {}).get("spotify"),
         "total_playlists": total_playlists,
@@ -102,285 +87,72 @@ def get_user_info(token):
         "id": data.get("id"),
     }
 
-    print(f"[Spotify] User info fetched: {user_info}")
-    return user_info
+def ensure_cache(user_id, token):
+    cached = load_cache(user_id)
+    if cached:
+        return cached["top_tracks"], cached["recent_tracks"], cached["user"], cached.get("access_token")
+    user_data = get_user_info(token)
+    if not user_data:
+        return [], [], None, None
+    top_tracks, recent_tracks = fetch_tracks_with_genres_and_similar(token, limit=50, lastfm_api_key=LASTFM_API_KEY)
+    save_cache(user_id, user_data, top_tracks, recent_tracks, token)
+    return top_tracks, recent_tracks, user_data, token
 
-
+# Routes
 @views_bp.route("/")
 def dashboard():
-    print("[Route] /dashboard called")
     token = session.get("access_token")
     if not token:
-        print("[Route] No access token in session, rendering base.html with no user")
         return render_template("base.html", user=None, default_page="home")
-
-    cached = load_cache()
-    if cached:
-        print("[Route] Using cached data for dashboard")
-        user = cached["user"]
-        top_tracks = cached["top_tracks"]
-        recent_tracks = cached["recent_tracks"]
-    else:
-        print("[Route] No valid cache found, fetching data from APIs")
-        user = get_user_info(token)
-        top_tracks, recent_tracks = fetch_tracks_with_genres_and_similar(
-            token, limit=50, lastfm_api_key=LASTFM_API_KEY
-        )
-        save_cache(user, top_tracks, recent_tracks)
-
-    return render_template(
-        "base.html",
-        user=user,
-        default_page="tracks",
-        top_tracks=top_tracks,
-        recent_tracks=recent_tracks
-    )
-
-@views_bp.route("/home")
-def home_fragment():
-    print("[Route] /home called")
-    token = session.get("access_token")
-    if not token:
-        print("[Route] No token, rendering home.html with user=None")
-        return render_template("blocks/home.html", user=None)
-
-    cached = load_cache()
-    user = cached["user"] if cached else get_user_info(token)
-    print(f"[Route] Rendering home.html for user: {user}")
-    return render_template("blocks/home.html", user=user)
+    user_id = session.get("user_id")
+    top_tracks, recent_tracks, user, _ = ensure_cache(user_id, token)
+    if not user:
+        session.clear()
+        return render_template("base.html", user=None, default_page="home")
+    return render_template("base.html", user=user, default_page="tracks", top_tracks=top_tracks, recent_tracks=recent_tracks)
 
 @views_bp.route("/tracks")
 def tracks():
-    print("[Route] /tracks called")
     token = session.get("access_token")
     if not token:
-        print("[Route] No token, rendering tracks.html with empty lists")
-        return render_template(
-            "blocks/tracks.html",
-            user=None,              
-            top_tracks=[],
-            recent_tracks=[]
-        )
+        return render_template("blocks/tracks.html", user=None, top_tracks=[], recent_tracks=[])
+    user_id = session.get("user_id")
+    top_tracks, recent_tracks, user, _ = ensure_cache(user_id, token)
+    if not user:
+        session.clear()
+        return render_template("blocks/tracks.html", user=None, top_tracks=[], recent_tracks=[])
+    return render_template("blocks/tracks.html", user=user, top_tracks=top_tracks, recent_tracks=recent_tracks)
 
-    cached = load_cache()
-    if cached:
-        print("[Route] Using cached track data")
-        top_tracks = cached["top_tracks"]
-        recent_tracks = cached["recent_tracks"]
-        user = cached["user"]
-    else:
-        print("[Route] No valid cache, fetching tracks from Spotify and LastFM")
-        user = get_user_info(token)
-        top_tracks, recent_tracks = fetch_tracks_with_genres_and_similar(
-            token, limit=50, lastfm_api_key=LASTFM_API_KEY
-        )
-        save_cache(user, top_tracks, recent_tracks)
+@views_bp.route("/home")
+def home_fragment():
+    token = session.get("access_token")
+    user_id = session.get("user_id")
+    user = None
+    if token:
+        _, _, user, _ = ensure_cache(user_id, token)
+    return render_template("blocks/home.html", user=user)
 
-    print(f"[Route] Rendering tracks.html for user {user} with {len(top_tracks)} top tracks and {len(recent_tracks)} recent tracks")
-    return render_template(
-        "blocks/tracks.html",
-        user=user,
-        top_tracks=top_tracks,
-        recent_tracks=recent_tracks
-    )
 @views_bp.route("/block3")
 def block3():
-    print("[Route] /block3 called")
     return render_template("blocks/block3.html")
-
-
-@views_bp.route("/logout")
-def logout():
-    print("[Route] /logout called")
-    session.clear()
-    return render_template("base.html", user=None, default_page="home")
 
 @views_bp.route("/profile")
 def profile():
-    print("[Route] /profile called")
-
     token = session.get("access_token")
     if not token:
-        print("[Route] No Spotify token found in session")
         return render_template("blocks/profile.html", user=None)
-
-    cached = load_cache()
-    if cached and "user" in cached:
-        print("[Route] Using cached user profile")
-        user = cached["user"]
-    else:
-        print("[Route] Fetching fresh user profile")
-        user = get_user_info(token)
-        
-        top_tracks = cached["top_tracks"] if cached else []
-        recent_tracks = cached["recent_tracks"] if cached else []
-        save_cache(user, top_tracks, recent_tracks)
-
+    user_id = session.get("user_id")
+    _, _, user, _ = ensure_cache(user_id, token)
+    if not user:
+        session.clear()
+        return render_template("blocks/profile.html", user=None)
     return render_template("blocks/profile.html", user=user)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+@views_bp.route("/logout")
+def logout():
+    user_id = session.get("user_id")
+    if user_id:
+        delete_cache(user_id)
+    session.clear()
+    return render_template("base.html", user=None, default_page="home")
 

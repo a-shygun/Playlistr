@@ -1,33 +1,33 @@
+
+import os
+import json
 import secrets
 import hashlib
 import base64
 import requests
-import os
-import json
 from flask import Blueprint, session, redirect, request
 
-# SPOTIPY_CLIENT_ID = "35d3c6267f8249bb97d537ce1b40b0a8"
-SPOTIPY_CLIENT_ID = os.getenv("SPOTIPY_CLIENT_ID")
-
+SPOTIPY_CLIENT_ID = os.environ.get("SPOTIPY_CLIENT_ID")
 REDIRECT_URI = "http://127.0.0.1:5000/callback"
 SCOPES = "user-read-private user-read-email user-top-read user-read-recently-played"
 
-TOKEN_CACHE = "temp/.spotify_token_cache.json"
 auth_bp = Blueprint('auth', __name__)
+TOKEN_CACHE_DIR = "temp"
+os.makedirs(TOKEN_CACHE_DIR, exist_ok=True)
 
+def get_token_cache_file(user_id):
+    return os.path.join(TOKEN_CACHE_DIR, f".spotify_token_cache_{user_id}.json")
 
 def generate_code_verifier():
     verifier = secrets.token_urlsafe(64)
     print(f"[PKCE] Generated code verifier: {verifier}")
     return verifier
 
-
 def generate_code_challenge(verifier):
     digest = hashlib.sha256(verifier.encode()).digest()
     challenge = base64.urlsafe_b64encode(digest).rstrip(b'=').decode('utf-8')
-    print(f"[PKCE] Generated code challenge from verifier: {challenge}")
+    print(f"[PKCE] Generated code challenge: {challenge}")
     return challenge
-
 
 def build_auth_url(code_challenge):
     params = {
@@ -39,13 +39,11 @@ def build_auth_url(code_challenge):
         "code_challenge": code_challenge
     }
     req = requests.Request('GET', "https://accounts.spotify.com/authorize", params=params).prepare()
-    print(f"[Spotify OAuth] Built authorization URL: {req.url}")
+    print(f"[Spotify OAuth] Built auth URL: {req.url}")
     return req.url
 
-
 def exchange_code_for_token(code: str, code_verifier: str) -> str:
-    """Exchange authorization code for access token."""
-    print(f"[Spotify OAuth] Exchanging code for token. Code: {code}, Verifier: {code_verifier}")
+    print("[Spotify OAuth] Exchanging code for token")
     response = requests.post(
         "https://accounts.spotify.com/api/token",
         data={
@@ -56,55 +54,51 @@ def exchange_code_for_token(code: str, code_verifier: str) -> str:
             "code_verifier": code_verifier
         }
     )
-    print(f"[Spotify OAuth] Token response status: {response.status_code}")
     response.raise_for_status()
-    access_token = response.json().get('access_token')
-    print(f"[Spotify OAuth] Access token received: {access_token}")
-    return access_token
-
-
+    token = response.json().get("access_token")
+    print(f"[Spotify OAuth] Access token received: {token}")
+    return token
 
 @auth_bp.route("/login")
 def login():
-    print("[Route] /login called")
-    if os.path.exists(TOKEN_CACHE):
-        with open(TOKEN_CACHE, "r") as f:
-            data = json.load(f)
-            session['access_token'] = data.get("access_token")
-            print(f"[Route] Loaded access token from cache: {session['access_token']}")
-        return redirect("/")
-
     code_verifier = generate_code_verifier()
     session['code_verifier'] = code_verifier
     code_challenge = generate_code_challenge(code_verifier)
     auth_url = build_auth_url(code_challenge)
-    print(f"[Route] Redirecting user to Spotify auth URL")
     return redirect(auth_url)
-
 
 @auth_bp.route("/callback")
 def callback():
-    print("[Route] /callback called")
-    code = request.args.get('code')
-    code_verifier = session.get('code_verifier')
-    print(f"[Route] Received code: {code}")
-    print(f"[Route] Using code_verifier from session: {code_verifier}")
-
-    if not code:
-        print("[Route] No code received, redirecting to /")
+    code = request.args.get("code")
+    code_verifier = session.get("code_verifier")
+    if not code or not code_verifier:
         return redirect("/")
-
     try:
         access_token = exchange_code_for_token(code, code_verifier)
         session['access_token'] = access_token
-        print(f"[Route] Stored access token in session")
-
-        with open(TOKEN_CACHE, "w") as f:
+        res = requests.get(
+            "https://api.spotify.com/v1/me",
+            headers={"Authorization": f"Bearer {access_token}"}
+        )
+        if res.status_code != 200:
+            return f"Failed to fetch user info: {res.text}", res.status_code
+        user_info = res.json()
+        user_id = user_info.get("id")
+        if not user_id:
+            raise ValueError("Could not retrieve user ID from Spotify")
+        session['user_id'] = user_id
+        token_file = get_token_cache_file(user_id)
+        with open(token_file, "w") as f:
             json.dump({"access_token": access_token}, f)
-            print(f"[Route] Saved access token to cache file: {TOKEN_CACHE}")
-
     except Exception as e:
-        print(f"[Route] Failed to get access token: {e}")
         return f"Failed to get access token: {e}", 500
-
+    return redirect("/")
+@auth_bp.route("/logout")
+def logout():
+    user_id = session.get("user_id")
+    if user_id:
+        token_file = get_token_cache_file(user_id)
+        if os.path.exists(token_file):
+            os.remove(token_file)
+    session.clear()
     return redirect("/")

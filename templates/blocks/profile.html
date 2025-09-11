@@ -1,10 +1,9 @@
-
-<div class="profile">
-    {% if user %}
+<div class="profile" id="profile-page">
+  {% if user %}
     <div class="profile-header style card">
-        <img class="profile-img" 
-            src="{{ user.img or url_for('static', filename='img/avatar_placeholder.png') }}" 
-            alt="Profile Picture">          
+        <img class="profile-img"
+             src="{{ user.img or url_for('static', filename='img/avatar_placeholder.png') }}"
+             alt="Profile Picture">
         <span class="wave1"></span>
         <span class="wave2"></span>
         <h2>Vibe Along, <a href="{{ user.spotify_link }}" target="_blank">{{ user.name or user.id }}!</a></h2>
@@ -14,38 +13,43 @@
             <div class="info-label">Email</div>
             <div class="info-value">{{ user.email or "Not available" }}</div>
         </div>
-
         <div class="info-row style card inset">
             <div class="info-label">Country</div>
             <div class="info-value">{{ user.country or "Unknown" }}</div>
         </div>
-
         <div class="info-row style card inset">
             <div class="info-label">Subscription</div>
             <div class="info-value">{{ user.product|capitalize }}</div>
         </div>
-
         <div class="info-row style card inset">
             <div class="info-label">Total Playlists</div>
             <div class="info-value">{{ user.total_playlists or "0" }}</div>
+        </div>
+        <div class="info-row style card inset">
+            <div class="info-label">Liked Songs</div>
+            <div class="info-value">{{ user.liked_songs or "0" }}</div>
+        </div>
+        <div class="info-row style card inset">
+            <div class="info-label">Total Playlist Tracks</div>
+            <div class="info-value">{{ user.total_playlist_tracks or "0" }}</div>
         </div>
     </div>
     <div class="gap"></div>
     <div class="logout style btn">
         <a href="/logout">Logout</a>
     </div>
-    {% else %}
+  {% else %}
     <div class="profile-header style card">
-      <img class="profile-img" 
-          src="{{ user.img or url_for('static', filename='img/avatar_placeholder.png') }}" 
-          alt="Profile Picture">      
-      <span class="wave1"></span>
-      <span class="wave2"></span>
-      <h2>Login First!</h2>
+        <img class="profile-img"
+             src="{{ url_for('static', filename='img/avatar_placeholder.png') }}"
+             alt="Profile Picture">
+        <span class="wave1"></span>
+        <span class="wave2"></span>
+        <h2>Login First!</h2>
     </div>
     <div class="gap"></div>
     <div class="login style btn active">
         <a href="/login">Login</a>
     </div>
-    {% endif %}
-  </div>
+  {% endif %}
+</div>

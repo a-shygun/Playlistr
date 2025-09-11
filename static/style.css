@@ -510,72 +510,14 @@ footer{
     }
   }
 }
-
-
-
 @keyframes scroll {
   from {
     transform: translateX(0);
   }
   to {
-    transform: translateX(-490%);
+    transform: translateX(-390%);
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 @-webkit-keyframes waves {
   0% {
     transform: scale(1);
@@ -603,3 +545,15 @@ footer{
   }
 }
 
+
+@media (min-width: 450px) {
+  html{
+    display: flex;
+    justify-content: center;
+
+  }
+  body {
+    width: 450px;
+    margin: 0 auto;
+  }
+}
