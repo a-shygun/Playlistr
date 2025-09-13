@@ -1,5 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
   const main = document.getElementById("main-content");
+
   function bindSegmentedControl() {
     const switchToggle = document.getElementById("switch");
     const topSongs = document.querySelector(".music-cols.top-songs");
@@ -17,6 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
     updateView();
     switchToggle.addEventListener("change", updateView);
   }
+
   function bindTrackToggles() {
     document.querySelectorAll(".toggle-more").forEach(btn => {
       btn.addEventListener("click", () => {
@@ -30,12 +32,9 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     });
   }
+
   function bindAjaxButtons() {
-    const footerBtns = document.querySelectorAll(".footer-toggle .btn");
     const slider = document.querySelector(".footer-slider");
-    footerBtns.forEach(btn => {
-      btn.replaceWith(btn.cloneNode(true));
-    });
     const newFooterBtns = document.querySelectorAll(".footer-toggle .btn");
     newFooterBtns.forEach(btn => {
       btn.addEventListener("click", async () => {
@@ -45,6 +44,7 @@ document.addEventListener("DOMContentLoaded", () => {
         main.innerHTML = html;
         bindTrackToggles();
         bindSegmentedControl();
+        bindRegistrationForm();
         newFooterBtns.forEach(b => {
           b.style.color = "";
           const icon = b.querySelector("i");
@@ -57,7 +57,39 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     });
   }
+
+  function bindRegistrationForm() {
+    const registerBtn = document.getElementById("register-btn");
+    const form = document.getElementById("register-form");
+    const statusMsg = document.getElementById("register-status");
+
+    if (!registerBtn || !form || !statusMsg) return;
+
+    registerBtn.addEventListener("click", () => {
+      form.classList.toggle("hidden");
+    });
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+
+      fetch("/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: document.getElementById("spotify-email").value,
+          username: document.getElementById("username").value
+        })
+      });
+
+      statusMsg.textContent = "Your request has been submitted! Please wait for approval.";
+      statusMsg.classList.remove("hidden");
+      form.reset();
+      form.classList.add("hidden");
+    });
+  }
+
   bindTrackToggles();
   bindSegmentedControl();
   bindAjaxButtons();
+  bindRegistrationForm();
 });

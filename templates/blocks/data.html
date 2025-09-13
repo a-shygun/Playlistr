@@ -1,0 +1,32 @@
+<div class="data-page">
+
+  {% if user %}
+  <div class="explain style card">
+    Your Analysis Plots
+  </div>
+  {% for plot in plots %}
+    <div class="plot-item style card">
+      <img src="{{ url_for('views.user_plots', user_id=user.id, filename=plot) }}" 
+           alt="Plot {{ loop.index }}">
+    </div>
+  {% endfor %}
+  <div class="network-detail">
+    Here is your network
+  </div>
+  <div class="network-section style card">
+    <iframe 
+      src="{{ url_for('views.network') }}" 
+      width="100%" 
+      height="600px" 
+      style="border: none;">
+    </iframe>
+  </div>
+
+  {% else %}
+    <div class="no-user style card">
+      <h2>No user logged in.</h2>
+      <p>Please <a href="/login">login</a> to view your data and analysis plots.</p>
+    </div>
+  {% endif %}
+
+</div>

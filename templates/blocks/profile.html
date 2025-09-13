@@ -14,20 +14,12 @@
             <div class="info-value">{{ user.email or "Not available" }}</div>
         </div>
         <div class="info-row style card inset">
-            <div class="info-label">Country</div>
-            <div class="info-value">{{ user.country or "Unknown" }}</div>
-        </div>
-        <div class="info-row style card inset">
-            <div class="info-label">Subscription</div>
-            <div class="info-value">{{ user.product|capitalize }}</div>
+            <div class="info-label">Account</div>
+            <div class="info-value">{{ user.product|capitalize }} - {{ user.country or "Unknown" }}</div>
         </div>
         <div class="info-row style card inset">
             <div class="info-label">Total Playlists</div>
             <div class="info-value">{{ user.total_playlists or "0" }}</div>
-        </div>
-        <div class="info-row style card inset">
-            <div class="info-label">Liked Songs</div>
-            <div class="info-value">{{ user.liked_songs or "0" }}</div>
         </div>
         <div class="info-row style card inset">
             <div class="info-label">Total Playlist Tracks</div>

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Spotify Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" rel="stylesheet"/>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style/style.css') }}">
 </head>
 <body>
     <header id="nav-bar" class="style">
@@ -13,14 +13,14 @@
             <h1>PLAYLISTR</h1>
         </a>
     </header>
-    <main id="main-content" data-user="{{ user | tojson }}">
+    <main id="main-content">
         {% include "blocks/home.html" %}
     </main>
     <footer id="foot-bar" class="style">
         <div class="footer-toggle">
             <button class="style btn" style="color: var(--greyLight-1)" data-url="/home"><i class="ri-home-fill"></i></button>
             <button class="style btn" data-url="/tracks"><i class="ri-music-2-line"></i></button>
-            <button class="style btn" data-url="/block3"><i class="ri-bubble-chart-line"></i></button>
+            <button class="style btn" data-url="/data"><i class="ri-bubble-chart-line"></i></button>
             <button class="style btn" data-url="/profile"><i class="ri-user-line"></i></button>
             <div class="footer-slider"></div>
         </div>
