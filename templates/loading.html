@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Loading...</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: #121212;
+      color: #fff;
+      flex-direction: column;
+      font-family: Arial, sans-serif;
+    }
+
+    .spinner {
+      border: 8px solid #f3f3f3;
+      border-top: 8px solid #4bd183;
+      border-radius: 50%;
+      width: 80px;
+      height: 80px;
+      animation: spin 1s linear infinite;
+      margin-bottom: 30px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .status {
+      position: relative;
+      height: 30px;
+      overflow: hidden;
+      font-size: 18px;
+      text-align: center;
+      width: 600px;
+    }
+
+    .status div {
+      position: absolute;
+      width: 100%;
+      opacity: 0;
+      transform: translateY(100%);
+      transition: all 0.5s ease-in-out;
+    }
+
+    .status div.active {
+      opacity: 1;
+      transform: translateY(0%);
+    }
+
+    .status div.exit {
+      opacity: 0;
+      transform: translateY(-100%);
+    }
+  </style>
+</head>
+<body>
+  <div class="spinner"></div>
+  <div class="status"></div>
+
+  <script>
+    const messages = [
+      "Connected to Spotify...",
+      "Fetching account info...",
+      "Loading top tracks...",
+      "Loading recent tracks...",
+      "Loading playlists...",
+      "Getting similar songs...",
+      "Fetching genres...",
+      "Preprocessing data...",
+      "Generating plots...",
+      "Building networks...",
+      "Indexing files...",
+      "Injecting HTML...",
+      "Finalizing setup...",
+      "Almost done..."
+    ];
+
+    let current = 0;
+    const interval = 3000; // 3 seconds per message
+
+    window.onload = () => {
+      const statusContainer = document.querySelector(".status");
+      messages.forEach(msg => {
+        const div = document.createElement("div");
+        div.textContent = msg;
+        statusContainer.appendChild(div);
+      });
+
+      const allDivs = document.querySelectorAll(".status div");
+      allDivs[0].classList.add("active");
+
+      setInterval(() => {
+        allDivs[current].classList.remove("active");
+        allDivs[current].classList.add("exit");
+
+        current = (current + 1) % allDivs.length;
+
+        allDivs[current].classList.remove("exit");
+        allDivs[current].classList.add("active");
+      }, interval);
+
+      // Redirect to /setup after 1s so spinner & first message appear
+      setTimeout(() => {
+        window.location.href = "/setup";
+      }, 10000);
+    }
+  </script>
+</body>
+</html>

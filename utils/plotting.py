@@ -119,6 +119,10 @@ def plot_wordcloud_artists(df, plots_dir):
 
 def plot_playcount_distribution(df, plots_dir):
     df_exploded = df.explode('genres')
+    
+    # Ensure playcount is numeric
+    df_exploded["playcount"] = pd.to_numeric(df_exploded["playcount"], errors="coerce").fillna(0)
+    
     log_playcounts = np.log1p(df_exploded["playcount"])
 
     fig, ax = plt.subplots(figsize=(6, 9), dpi=200, facecolor=None) 
@@ -163,7 +167,7 @@ def plot_playcount_distribution(df, plots_dir):
     }
 
     save_plot_explanation(plots_dir, "playcount_distribution", explanation)
-    
+
 def get_artist_genre_playlist_network_html(df, plots_dir):
     df_exploded = df.explode('genres')
     top_artists = df['artist'].value_counts().head(30).index
@@ -223,24 +227,38 @@ def get_artist_genre_playlist_network_html(df, plots_dir):
 
 
 def plot_polar_playcount_playlist(df, plots_dir):
-
     min_year, max_year = int(df['year'].min()), int(df['year'].max())
-    angles = 2 * np.pi * (df['year'] - min_year) / (max_year - min_year)
-
-    radii = df['playcount']
-    sizes = df['playcount'] / df['playcount'].max() * 1000
 
     top_playlists = df['playlist'].value_counts().head(10).index
-    df_plot = df[df['playlist'].isin(top_playlists)]
+    df_plot = df[df['playlist'].isin(top_playlists)].copy()
+
+    # Compute angles and radii for filtered df
+    # Compute angles and radii for filtered df
+    angles = 2 * np.pi * (df_plot['year'] - min_year) / (max_year - min_year)
+    radii = df_plot['playcount']
+    sizes = df_plot['playcount'] / df_plot['playcount'].max() * 1000
+
+    # Convert to float explicitly
+    angles = angles.astype(float)
+    radii = radii.astype(float)
+    sizes = sizes.astype(float)
+    
+    angles = pd.to_numeric(angles, errors='coerce').fillna(0)
+    radii = pd.to_numeric(radii, errors='coerce').fillna(0)
+    sizes = pd.to_numeric(sizes, errors='coerce').fillna(1)
+    
     playlist_to_color = {pl: i for i, pl in enumerate(top_playlists)}
     colors = df_plot['playlist'].map(playlist_to_color)
 
+
     fig = plt.figure(figsize=(6, 9), dpi=300, facecolor=None)
     ax = fig.add_subplot(projection='polar', facecolor=None)
+
+    # Scatter plot
     scatter = ax.scatter(
         angles,
         radii,
-        c=df['playcount'],
+        c=df_plot['playcount'],  # use df_plot
         s=sizes,
         cmap='rainbow',
         alpha=0.3,
@@ -248,6 +266,7 @@ def plot_polar_playcount_playlist(df, plots_dir):
         linewidth=0.0,
     )
 
+    # Set polar plot aesthetics
     ax.set_ylim(-1_000_000, 10_500_000)
     ax.set_rorigin(-5_000_000)
     ax.set_theta_zero_location('N')
@@ -255,7 +274,8 @@ def plot_polar_playcount_playlist(df, plots_dir):
     ax.set_rlabel_position(45)
     ax.grid(False)
     for spine in ax.spines.values():
-        spine.set_color(None) 
+        spine.set_color(None)
+
     num_ticks = min(10, max_year - min_year + 1)
     theta_ticks = np.linspace(0, 2 * np.pi, num_ticks, endpoint=True)[1:]
     year_labels = [str(int(y)) for y in np.linspace(min_year, max_year, num_ticks, endpoint=True)][1:]

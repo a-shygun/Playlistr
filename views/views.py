@@ -182,36 +182,4 @@ def register():
         return jsonify({"message": f"Failed to send email: {str(e)}"}), 500
     
     
-    
-# EXPERIMENTAL - CAN BE DELETELD
-from flask import Response
 
-@views_bp.route("/stream_logs")
-def stream_logs():
-    user_info = session.get("user_info")
-    if not user_info: 
-        return "Not logged in", 403
-
-    user_id = user_info["id"]
-    log_file = os.path.join("temp", user_id, "setup.log")
-
-    def generate():
-        with open(log_file, "r") as f:
-            while True:
-                line = f.readline()
-                if line:
-                    yield line
-                else:
-                    import time
-                    time.sleep(0.5)
-                # optionally break if done
-                if os.path.exists(os.path.join("temp", user_id, "setup_done.txt")):
-                    break
-
-    return Response(generate(), mimetype="text/plain")
-    
-    
-    
-@views_bp.route("/setup_progress")
-def setup_progress():
-    return render_template("setup_progress.html")

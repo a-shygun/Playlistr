@@ -5,7 +5,7 @@ import requests
 import shutil
 import os
 import traceback
-from flask import Blueprint, redirect, request, session
+from flask import Blueprint, redirect, request, session, render_template
 from .fetch import (fetch_user_info,
                     fetch_save_user_tracks,
                     save_user_info,
@@ -77,8 +77,6 @@ def logout():
     return redirect("/")
 
 
-#DONT DELTE
-
 # @auth_bp.route("/callback")
 # def callback():
 #     try:
@@ -126,27 +124,35 @@ def logout():
 
 
 
-# EXPERIMENTAL- CAN BE DELETED
-from flask import session, redirect, url_for
-from threading import Thread
-
-def background_user_setup(user_id):
-    user_dir = os.path.join("temp", user_id)
-    datasets_dir = os.path.join(user_dir, "datasets")
-    plots_dir = os.path.join(user_dir, "plots")
-    
-    log_file = os.path.join(user_dir, "setup.log")
-
-
-    def log(message):
-        with open(log_file, "a") as f:
-            f.write(message + "\n")
-        print(message)
-
-    os.makedirs(datasets_dir, exist_ok=True)
-    os.makedirs(plots_dir, exist_ok=True)
-
+from flask import Blueprint, render_template, session, redirect, url_for
+import threading, os, json, traceback
+@auth_bp.route("/callback")
+def callback():
     try:
+        # Step 1: Get Spotify token & user info
+        set_access_token()
+        fetch_user_info()
+    except Exception as e:
+        traceback.print_exc()
+        return f"Spotify authentication failed: {e}", 500
+
+    # Step 2: Redirect to the loading page
+    return render_template("loading.html")  # user sees spinner while setup happens
+
+
+@auth_bp.route("/setup")
+def setup():
+    """This route does all the heavy lifting and then redirects to /."""
+    try:
+        user_info = session.get("user_info")
+        user_id = user_info.get("id")
+        user_dir = os.path.join("temp", user_id)
+        datasets_dir = os.path.join(user_dir, "datasets")
+        plots_dir = os.path.join(user_dir, "plots")
+
+        os.makedirs(datasets_dir, exist_ok=True)
+        os.makedirs(plots_dir, exist_ok=True)
+
         if not os.listdir(datasets_dir):
             print(f"[DataEDA] Datasets folder empty for user {user_id}, generating CSVs and JSON")
             fetch_save_user_tracks()
@@ -165,31 +171,17 @@ def background_user_setup(user_id):
             print(f"[DataEDA] Plots created for user {user_id}")
         else:
             print(f"[DataEDA] Plots already exist for user {user_id}, skipping generation")
-    except Exception as e:
-        print(f"[Background] Error: {e}")
-    finally:
-        # Optional: mark as done
-        done_file = os.path.join(user_dir, "setup_done.txt")
-        with open(done_file, "w") as f:
-            f.write("done")
 
-# THIS CAN ALSO BE DELTED THERE IS A MAIN ONE ABOVE THIS ONE SI EXPLERIOMENT
-@auth_bp.route("/callback")
-def callback():
-    try:
-        set_access_token()
-        fetch_user_info()
-        user_id = session.get("user_info").get("id")
-        
-        # start background thread
-        thread = Thread(target=background_user_setup, args=(user_id,))
-        thread.start()
-
-        # redirect immediately to progress page
-        return redirect(url_for("views.setup_progress"))
+        # Reload user_info from file just in case
+        user_info_file = os.path.join(datasets_dir, "user_info.json")
+        if os.path.exists(user_info_file):
+            with open(user_info_file, "r") as f:
+                session["user_info"] = json.load(f)
 
     except Exception as e:
-        print(f"[Auth] Spotify authentication failed: {e}")
+        print(f"[Setup] Error during setup: {e}")
         traceback.print_exc()
-        return f"Spotify authentication failed: {e}", 500
+        return f"Setup failed: {e}", 500
 
+    # Step 3: Redirect to main page
+    return redirect("/")
