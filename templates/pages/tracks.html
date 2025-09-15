@@ -1,0 +1,131 @@
+<div class="tracks" id="tracks-page">
+  {% if user %}
+    <div class="tracks-header style card">
+      <h2>Your Activity</h2>
+      <p>
+        Each track includes
+        <span>details</span>,
+        <span>genres</span>, and
+        <span>recommendations</span>
+        to help you explore more music you’ll love.
+      </p>
+    </div>
+    <div class="col-toggle style card">
+      <input type="checkbox" id="switch" />
+      <label class="style card" for="switch">
+        <p class="top">TOP TRACKS</p>
+        <p class="recent">RECENT TRACKS</p>
+        <div class="slider style card"></div>
+      </label>
+    </div>
+    {% for section, tracks in [("top-songs", top_tracks), ("recent-songs", recent_tracks)] %}
+      <div class="music-cols {{ section }}">
+        {% for track in tracks %}
+          <div class="record style card">
+            <div class="main style card">
+              <a class="image style" href="{{ track.name_url }}">
+                <img src="{{ track.album_art }}" alt="{{ track.name }}">
+              </a>
+              <div class="details-div">
+                <div class="top">
+                  <a href="{{ track.name_url }}"><h3>{{ track.name }}</h3></a>
+                  <a href="{{ track.name_url }}"><h4>{{ track.artist }}</h4></a>
+                  <a href="{{ track.name_url }}"><h5>{{ track.album }}</h5></a>
+                </div>
+                <button class="toggle-more style btn">▼ See More</button>
+              </div>
+            </div>
+            <div class="expandable">
+              <h1>Genres</h1>
+              <div class="genres-row style card">
+                {% if track.genres %}
+                  {% for g in track.genres %}
+                    <a class="style link" href="https://www.google.com/search?q={{ g | urlencode }}" target="_blank">{{ g }}</a>
+                  {% endfor %}
+                {% else %}
+                  <a class="style link" href="https://www.google.com/search?q={{ track.artist | urlencode }}" target="_blank">{{ track.artist }}</a>
+                {% endif %}
+              </div>
+              
+              <h1>Similar Songs</h1>
+              <div class="similar-rows style card">
+                {% if track.similar_songs %}
+                  {% for s in track.similar_songs %}
+                    {% for song_name, artist_name in s.items() %}
+                      <a class="song-line style link" 
+                        href="https://www.google.com/search?q={{ (song_name + ' - ' + artist_name) | urlencode }}" 
+                        target="_blank">
+                        {{ song_name }} — {{ artist_name }}
+                      </a>
+                    {% endfor %}
+                  {% endfor %}
+                {% else %}
+                  <div style="display: flex; flex-direction: row; height:40px; align-items:center; justify-content: space-between">
+                    <p>Couldn't find similar songs.</p>
+                    <a class="style link" style="align-items:center; height:100%" href="https://www.google.com/search?q={{ (track.name + ' - ' + track.artist) | urlencode }}" target="_blank">Search Google</a>
+                  </div>                      
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% endfor %}
+
+  {% else %}
+    <div class="tracks-header style card">
+      <h2>User's Activity</h2>
+      <p>
+        Each track includes
+        <span>details</span>,
+        <span>genres</span>, and
+        <span>recommendations</span>
+        to help you explore more music you’ll love.
+      </p>
+    </div>
+    <div class="col-toggle style card">
+      <input type="checkbox" id="switch" />
+      <label class="style card" for="switch">
+        <p class="top">TOP TRACKS</p>
+        <p class="recent">RECENT TRACKS</p>
+        <div class="slider style card"></div>
+      </label>
+    </div>
+
+    {% for section in ["top-songs", "recent-songs"] %}
+      <div class="music-cols {{ section }}">
+        {% for i in range(5) %}
+          <div class="record style card">
+            <div class="main style card">
+              <a class="image style" href="#">
+                <img src="{{ url_for('static', filename='img/placeholder/album_placeholder.png') }}" alt="Placeholder Album">
+              </a>
+              <div class="details-div">
+                <div class="top">
+                  <a href="#"><h3>Track Name</h3></a>
+                  <a href="#"><h4>Artist Name</h4></a>
+                  <a href="#"><h5>Album Name</h5></a>
+                </div>
+                <button class="toggle-more style btn">▼ See More</button>
+              </div>
+            </div>
+            <div class="expandable">
+              <h1>Genres</h1>
+              <div class="genres-row style card">
+                <a class="style link" href="#">Genre 1</a>
+                <a class="style link" href="#">Genre 2</a>
+                <a class="style link" href="#">Genre 3</a>
+              </div>
+              <h1>Similar Songs</h1>
+              <div class="similar-rows style card">
+                <a class="song-line style link" href="#">Similar Song 1 — Artist 1</a>
+                <a class="song-line style link" href="#">Similar Song 2 — Artist 2</a>
+                <a class="song-line style link" href="#">Similar Song 3 — Artist 3</a>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% endfor %}
+  {% endif %}
+</div>

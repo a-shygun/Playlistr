@@ -1,0 +1,122 @@
+
+<div class="home" id="home-page">
+  <section class="hero-section style card" id="hero-section">
+    {% if user %}
+      <h1 id="hero-title">Welcome back, {{ user.name }} 👋</h1>
+      <p id="hero-text">
+        Explore your music like never before! Discover your top tracks, recent songs, and related music suggestions—all personalized for you.
+      </p>
+    {% else %}
+      <h1 id="hero-title">Welcome to Your Spotify Dashboard</h1>
+      <p id="hero-text">
+        Explore your music like never before! Discover your top tracks, recent songs, and related music suggestions.
+      </p>
+    {% endif %}
+  </section>
+
+  {% if not user %}
+  <section class="register-section style card" id="register-section">
+    <h2>Join the Waitlist</h2>
+    <p>
+      Due to Spotify's <a href="https://developer.spotify.com/documentation/web-api/concepts/quota-modes" 
+      target="_blank">API access limitations</a>, 
+      public sign-ups are restricted.  
+    </p>
+    <p>Drop your Spotify email and a username below, you'll be allowlisted asap!</p>
+    <button id="register-btn" class="style btn">Register</button>
+
+    <form id="register-form" class="hidden">
+      <label for="spotify-email"><h2>Spotify Email</h2></label>
+      <input class="style btn" type="email" id="spotify-email" name="spotify_email" placeholder="" required>
+
+      <label for="username"><h2>Username</h2></label>
+      <input class="style btn" type="text" id="username" name="username" placeholder="" required>
+
+      <button type="submit" class="style btn">Submit Registration</button>
+    </form>
+
+    <p id="register-status" class="hidden"></p>
+  </section>
+  {% endif %}
+
+  <section class="tech-section style card" id="tech-section">
+    <h2>Powered By</h2>
+    <div class="tech-explain">
+      <div class="tech-card style card">
+        <div class="tech-icon">
+          <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg" alt="Python">
+          <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/flask/flask-original.svg" alt="Flask">
+        </div>
+        <div class="tech-text">
+          <h3>Python + Flask</h3>
+          <p>Backend logic, API routing, and server management.</p>
+        </div>
+      </div>
+
+      <div class="tech-card style card">
+        <div class="tech-icon">
+          <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/pandas/pandas-original.svg" alt="Pandas">
+          <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/matplotlib/matplotlib-original.svg" alt="Matplotlib" style="height:40px;">
+        </div>
+        <div class="tech-text">
+          <h3>Matplotlib + Pandas</h3>
+          <p>Data analysis, visualizations, and charts.</p>
+        </div>
+      </div>
+
+      <div class="tech-card style card">
+        <div class="tech-icon">
+          <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/html5/html5-original.svg" alt="HTML">
+          <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/css3/css3-original.svg" alt="CSS">
+          <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/javascript/javascript-original.svg" alt="JavaScript">
+        </div>
+        <div class="tech-text">
+          <h3>HTML + CSS + JavaScript</h3>
+          <p>Frontend design, interactivity, and user interface.</p>
+        </div>
+      </div>
+
+      <div class="tech-card style card">
+        <div class="tech-icon">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/1/19/Spotify_logo_without_text.svg" alt="Spotify" style="height:40px;">
+          <img src="https://img.icons8.com/color/452/lastfm.png" alt="Last.fm" style="height:40px;">
+        </div>
+        <div class="tech-text">
+          <h3>Spotify + Last.fm APIs</h3>
+          <p>Music data, playlists, genres, and recommendations.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- <div class="carousel style card">
+      <div class="carousel-track">
+        <div><a href="https://flask.palletsprojects.com/" target="_blank"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/flask/flask-original.svg" alt="Flask"></a></div>
+        <div><a href="https://www.python.org" target="_blank"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg" alt="Python"></a></div>
+        <div><a href="https://matplotlib.org/" target="_blank"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/matplotlib/matplotlib-original.svg" alt="Matplotlib"></a></div>
+        <div><a href="https://pandas.pydata.org/" target="_blank"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/pandas/pandas-original.svg" alt="Pandas"></a></div>
+        <div><a href="https://developer.mozilla.org/en-US/docs/Web/HTML" target="_blank"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/html5/html5-original.svg" alt="HTML"></a></div>
+        <div><a href="https://developer.mozilla.org/en-US/docs/Web/CSS" target="_blank"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/css3/css3-original.svg" alt="CSS"></a></div>
+        <div><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript" target="_blank"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/javascript/javascript-original.svg" alt="JavaScript"></a></div>
+        <div><a href="https://developer.spotify.com/documentation/web-api" target="_blank"><img src="https://storage.googleapis.com/pr-newsroom-wp/1/2023/05/Spotify_Primary_Logo_RGB_Green.png" alt="Spotify"></a></div>
+        <div><a href="https://www.last.fm/api" target="_blank"><img src="https://img.icons8.com/color/452/lastfm.png" alt="LastFM"></a></div>
+        <div><a href="https://flask.palletsprojects.com/" target="_blank"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/flask/flask-original.svg" alt="Flask"></a></div>
+        <div><a href="https://www.python.org" target="_blank"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg" alt="Python"></a></div>
+        <div><a href="https://matplotlib.org/" target="_blank"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/matplotlib/matplotlib-original.svg" alt="Matplotlib"></a></div>
+      </div>
+    </div> -->
+  </section>
+
+  <section class="contact style card" id="contact-section">
+    <div class="left">
+      <h3 class="your-name">Amir Shygun™</h3>
+      <p>&copy; 2025 All Rights Reserved.</p>
+    </div>
+
+    <div class="right">
+      <a href="https://shygun.com" target="_blank" title="Website"><i class="ri-links-line ri-2x"></i></a>
+      <a href="https://github.com/a-shygun" target="_blank" title="GitHub"><i class="ri-github-line ri-2x"></i></a>
+      <a href="https://linkedin.com/in/amirshygun" target="_blank" title="LinkedIn"><i class="ri-linkedin-box-line ri-2x"></i></a>
+      <a href="mailto:ryan.shygun@gmail.com" title="Email"><i class="ri-mail-line ri-2x"></i></a>
+    </div>
+  </section>
+</div>

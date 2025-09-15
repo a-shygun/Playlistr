@@ -1,0 +1,135 @@
+{% if user %}
+
+<div class="data">
+
+  <div class="wordcloud-genres style card">
+    <div class="plot-details style card">
+      <h3>Genres Wordcloud</h3>
+      <p>{{ plot_json.wordcloud_genres.summary }}</p>
+    </div>
+    <div class="canvas style card">
+      <canvas id="genresBarChart"></canvas>
+    </div>
+    <img class="style card" src="{{ url_for('views.user_plots', filename='wordcloud_genres.png') }}" alt="Wordcloud Genres">
+  </div>
+
+  <div class="wordcloud-artists style card">
+    <div class="plot-details style card">
+      <h3>Artists Wordcloud</h3>
+      <p>{{ plot_json.wordcloud_artists.summary }}</p>
+    </div>
+    <div class="canvas style card">
+      <canvas id="artistsBarChart"></canvas>
+    </div>
+    <img class="style card" src="{{ url_for('views.user_plots', filename='wordcloud_artists.png') }}" alt="Wordcloud Artists">
+  </div>
+
+  <div class="playlist-playcount style card">
+    <div class="plot-details style card">
+      <h3>Top Playlists by Playcount</h3>
+      <p>{{ plot_json.playcount_distribution.summary }}</p>
+    </div>
+    <div class="canvas style card">
+      <canvas id="playcountBarChart"></canvas>
+    </div>
+    <img class="style card" src="{{ url_for('views.user_plots', user_id=user.id, filename='playcount_distribution.png') }}" 
+         alt="Playcount Distribution">
+  </div>
+
+  <div class="pie-year style card">
+    <div class="plot-details style card">
+      <h3>Top Playlists by Year</h3>
+      <p>{{ plot_json.polar_playcount_playlist.summary }}</p>
+    </div>
+    <img class="style card" src="{{ url_for('views.user_plots', user_id=user.id, filename='polar_playcount_playlist.png') }}" alt="Playcount Distribution">
+  </div>
+  
+  <div class="network-section style card">
+    <div class="plot-details style card">
+      <h3>Artist-Genre-Playlist Network</h3>
+      <p>{{ plot_json.artist_genre_playlist_network.summary }}</p>
+      <button 
+        class="style btn" 
+        onclick="window.open('/network', '_blank')">
+        Fullscreen Network
+      </button>    
+    </div>
+    <div class="iframe style card">
+      <iframe 
+        src="{{ url_for('views.network') }}" 
+        width="100%" 
+        height="400px" 
+        style="border: none;">
+        Your browser does not support iframes. 
+      </iframe>
+    </div>
+  </div>
+
+</div>
+{% else %}
+
+<div class="data">
+
+  <div class="wordcloud-genres style card">
+    <div class="plot-details style card">
+      <h3>Genres Wordcloud</h3>
+      <p>Top genres for this demo: Pop, Rock, Jazz, Hip-Hop, Electronic</p>
+    </div>
+    <div class="canvas style card">
+      <canvas id="genresBarChartDemo"></canvas>
+    </div>
+    <img class="style card" src="{{ url_for('static', filename='img/placeholder/wordcloud_genres.png') }}" alt="Wordcloud Genres">
+  </div>
+
+  <div class="wordcloud-artists style card">
+    <div class="plot-details style card">
+      <h3>Artists Wordcloud</h3>
+      <p>Top artists for this demo: Alice, Bob, Charlie, Dana, Eve</p>
+    </div>
+    <div class="canvas style card">
+      <canvas id="artistsBarChartDemo"></canvas>
+    </div>
+    <img class="style card" src="{{ url_for('static', filename='img/placeholder/wordcloud_artists.png') }}" alt="Wordcloud Artists">
+  </div>
+
+  <div class="playlist-playcount style card">
+    <div class="plot-details style card">
+      <h3>Top Playlists by Playcount</h3>
+      <p>Demo playcount summary: Most played playlists this week</p>
+    </div>
+    <div class="canvas style card">
+      <canvas id="playcountBarChartDemo"></canvas>
+    </div>
+    <img class="style card" src="{{ url_for('static', filename='img/placeholder/playcount_distribution.png') }}" alt="Playcount Distribution">
+  </div>
+
+  <div class="pie-year style card">
+    <div class="plot-details style card">
+      <h3>Top Playlists by Year</h3>
+      <p>Demo year summary: Most popular playlists 2018-2025</p>
+    </div>
+    <img class="style card" src="{{ url_for('static', filename='img/placeholder/polar_playcount_playlist.png') }}" alt="Playlists by Year">
+  </div>
+  
+  <div class="network-section style card">
+    <div class="plot-details style card">
+      <h3>Artist-Genre-Playlist Network</h3>
+      <p>Demo network showing connections between sample artists, genres, and playlists</p>
+      <button 
+        class="style btn">
+        Fullscreen Network
+      </button>
+    </div>
+    <div class="iframe style card">
+      <iframe 
+        width="100%" 
+        height="400px" 
+        style="border: none; background-color: transparent;">
+        Your browser does not support iframes. 
+      </iframe>
+    </div>
+  </div>
+
+</div>
+
+{% endif %}

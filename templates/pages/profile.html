@@ -1,0 +1,44 @@
+<div class="profile" id="profile-page">
+  <div class="profile-header style card">
+      <img src="{{ user.img if user else url_for('static', filename='img/placeholder/avatar_placeholder.png') }}" 
+           alt="Profile Picture">
+      <span class="wave1"></span>
+      <span class="wave2"></span>
+      <span class="wave3"></span>
+      <h2>
+        Vibe Along, 
+        {% if user %}
+          <a href="{{ user.spotify_link }}" target="_blank">{{ user.name or user.id }}!</a>
+        {% else %}
+          <a href="/login" target="_blank">Stranger!</a>
+        {% endif %}
+      </h2>
+  </div>
+
+  <div class="profile-info style card">
+      <div class="info-row style card">
+          <div class="info-label style card">Email</div>
+          <div class="info-value style card">
+              {{ user.email if user else "Not available" }}
+          </div>
+      </div>
+      <div class="info-row style card">
+          <div class="info-label style card">Account</div>
+          <div class="info-value style card">
+              {{ user.product|capitalize if user else "Free" }} - {{ user.country if user else "Unknown" }}
+          </div>
+      </div>
+      <div class="info-row style card">
+          <div class="info-label style card">Total Playlists</div>
+          <div class="info-value style card">
+              {{ user.total_playlists if user else "0" }}
+          </div>
+      </div>
+      <div class="info-row style card">
+          <div class="info-label style card">Total Playlist Tracks</div>
+          <div class="info-value style card">
+              {{ user.total_tracks if user else "0" }}
+          </div>
+      </div>
+  </div>
+</div>

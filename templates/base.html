@@ -3,28 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spotify Dashboard</title>
+    <title>ECHOSTATS | Spotify Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" rel="stylesheet"/>
     <link rel="stylesheet" href="{{ url_for('static', filename='style/style.css') }}">
-</head>
+    <link rel="icon" href="{{ url_for('static', filename='img/spotify-fill.svg') }}" type="image/svg+xml">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+    
 <body>
-    <header id="nav-bar" class="style">
-        <a class="logo" href='/'>
-            <h1>PLAYLISTR</h1>
-        </a>
-    </header>
-    <main id="main-content">
-        {% include "blocks/home.html" %}
-    </main>
-    <footer id="foot-bar" class="style">
-        <div class="footer-toggle">
-            <button class="style btn" style="color: var(--greyLight-1)" data-url="/home"><i class="ri-home-fill"></i></button>
-            <button class="style btn" data-url="/tracks"><i class="ri-music-2-line"></i></button>
-            <button class="style btn" data-url="/data"><i class="ri-bubble-chart-line"></i></button>
-            <button class="style btn" data-url="/profile"><i class="ri-user-line"></i></button>
-            <div class="footer-slider"></div>
-        </div>
-    </footer>
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  <header id="nav-bar" class="style">
+    {% include "components/header.html" %}
+  </header>
+
+  <main id="main-content">
+    {% include "pages/home.html" %}
+  </main>
+  
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>

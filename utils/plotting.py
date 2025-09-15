@@ -6,7 +6,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from wordcloud import WordCloud
 from pyvis.network import Network
-import re
+from flask import session
+import json
 
 def ensure_dir(path):
     os.makedirs(path, exist_ok=True)
@@ -18,7 +19,8 @@ def load_user_data(user_id):
     user_dir = os.path.join(project_root, "temp", user_id)
 
     csv_files = ["top_tracks.csv", "recent_tracks.csv", "user_songs.csv"]
-    dfs = [pd.read_csv(os.path.join(user_dir, f)) for f in csv_files if os.path.exists(os.path.join(user_dir, f))]
+    datasets_dir = os.path.join("temp", user_id, "datasets")
+    dfs = [pd.read_csv(os.path.join(datasets_dir, f)) for f in csv_files if os.path.exists(os.path.join(datasets_dir, f))]
     if not dfs:
         raise FileNotFoundError(f"No CSVs found for user at {user_dir}")
     df = pd.concat(dfs, ignore_index=True)
@@ -33,92 +35,93 @@ def load_user_data(user_id):
     df = df[df['genres'].apply(lambda x: len(x) > 0)]
     return df
 
+
+def save_plot_explanation(plots_dir, plot_name, explanation):
+    expo_path = os.path.join(plots_dir, "plot_expo.json")
+
+    if os.path.exists(expo_path):
+        with open(expo_path, "r") as f:
+            data = json.load(f)
+    else:
+        data = {}
+
+    data[plot_name] = explanation
+
+    with open(expo_path, "w") as f:
+        json.dump(data, f, indent=2)
 def plot_wordcloud_genres(df, plots_dir):
     genre_counts = df.explode('genres')['genres'].value_counts()
-    
+
+    wc_width, wc_height = 1000, 1500
     wc = WordCloud(
-        width=1000,
-        height=1500,
-        background_color='#E4EBF5',
+        width=wc_width,
+        height=wc_height,
+        background_color=None,
+        mode="RGBA",
         colormap='rainbow',
-        max_words=200,
+        max_words=100,
         prefer_horizontal=1,
     ).generate_from_frequencies(genre_counts)
     
-    plt.figure(figsize=(6,9), facecolor='#E4EBF5', dpi=500)
+    plt.figure(figsize=(wc_width/200, wc_height/200), dpi=200, facecolor=None)
     plt.imshow(wc, interpolation='lanczos')
     plt.axis('off')
     plt.tight_layout(pad=0)
-    plt.savefig(os.path.join(plots_dir, "wordcloud_genres.png"))
+    
+    plt.savefig(
+        os.path.join(plots_dir, "wordcloud_genres.png"),
+        transparent=True,
+        bbox_inches='tight',
+        pad_inches=0
+    )
     plt.close()
 
+    top_genres = genre_counts.head(5).to_dict()
+    explanation = {
+        "summary": f"Top genres are {', '.join(top_genres.keys())}.",
+        "top_genres": top_genres
+    }
+    save_plot_explanation(plots_dir, "wordcloud_genres", explanation)
+    
 def plot_wordcloud_artists(df, plots_dir):
     artist_counts = df['artist'].value_counts()
+
+    wc_width, wc_height = 1000, 1500
     wc = WordCloud(
-        width=1000,
-        height=1500,
-        background_color='#E4EBF5',
+        width=wc_width,
+        height=wc_height,
+        background_color=None,
+        mode='RGBA',
         colormap='rainbow',
-        max_words=200,
+        max_words=100,
         prefer_horizontal=1,
     ).generate_from_frequencies(artist_counts)
     
-    plt.figure(figsize=(6,9), facecolor='#E4EBF5', dpi=500)
+    plt.figure(figsize=(wc_width/200, wc_height/200), dpi=200, facecolor=None)
     plt.imshow(wc, interpolation='lanczos')
     plt.axis('off')
     plt.tight_layout(pad=0)
-    plt.savefig(os.path.join(plots_dir, "wordcloud_artists.png"))
+    
+    plt.savefig(
+        os.path.join(plots_dir, "wordcloud_artists.png"),
+        transparent=True,
+        bbox_inches='tight',
+        pad_inches=0
+    )
     plt.close()
 
-# def plot_playcount_distribution(df, plots_dir):
-    # df_exploded = df.explode('genres')
-    
-    # font_color = "#474e5f"  # desired font color
-    
-    # plt.figure(figsize=(6,9), facecolor='#E4EBF5', dpi=500)
+    top_artists = artist_counts.head(5).to_dict()
+    explanation = {
+        "summary": f"Most listened artists include {', '.join(top_artists.keys())}.",
+        "top_artists": top_artists
+    }
+    save_plot_explanation(plots_dir, "wordcloud_artists", explanation)
 
-    # log_playcounts = np.log1p(df_exploded["playcount"])
-    # sns.kdeplot(
-    #     data=df_exploded, 
-    #     y=log_playcounts,
-    #     hue='playlist',
-    #     multiple='fill',
-    #     fill=True,
-    #     alpha=0.6,
-    #     linewidth=1,
-    #     edgecolor='#E4EBF5',
-    #     warn_singular=False,
-    #     palette='rainbow',
-    #     legend=True
-    # )
-    # y_min = np.floor(log_playcounts.min())
-    # y_max = np.ceil(log_playcounts.max())
-    # plt.ylim(y_min, y_max)
-    # plt.yticks(
-    #     [y_min, y_max], 
-    #     [int(np.expm1(y_min)), int(np.expm1(y_max))],
-    #     color=font_color, rotation=90
-    # )
-    
-    # plt.xlim(0, 1)
-    # plt.xticks([0, 1], color=font_color)
-
-    # for spine in plt.gca().spines.values():
-    #     spine.set_color("#E4EBF5")
-    #     spine.set_linewidth(1)
-    # plt.title("Playcount Distribution by Playlist", color=font_color)
-    # plt.xlabel("Proportion", color=font_color)
-    # plt.ylabel("Playcount", color=font_color)
-    
-    # plt.grid(False)
-    # plt.tight_layout(pad=0)
-    # plt.savefig(os.path.join(plots_dir, "playcount_distribution.png"))
-    # plt.close()
 def plot_playcount_distribution(df, plots_dir):
-    
     df_exploded = df.explode('genres')
-    fig, ax = plt.subplots(figsize=(6,9), dpi=500, facecolor='#E4EBF5')
     log_playcounts = np.log1p(df_exploded["playcount"])
+
+    fig, ax = plt.subplots(figsize=(6, 9), dpi=200, facecolor=None) 
     sns.kdeplot(
         data=df_exploded,
         y=log_playcounts,
@@ -127,21 +130,41 @@ def plot_playcount_distribution(df, plots_dir):
         fill=True,
         alpha=0.6,
         linewidth=1,
-        edgecolor='#E4EBF5',
+        edgecolor=None,
         warn_singular=False,
         palette='rainbow',
         ax=ax
     )
     sns.move_legend(ax, 'upper right')
-    ax.set_axis_off()
-    ax.set_facecolor('#E4EBF5')
 
+    ax.set_axis_off()
+    ax.set_facecolor(None)
     plt.subplots_adjust(left=0, right=1, top=1, bottom=0)
-    plt.savefig(os.path.join(plots_dir, "playcount_distribution.png"))
+
+    plt.savefig(
+        os.path.join(plots_dir, "playcount_distribution.png"),
+        transparent=True,
+        bbox_inches='tight',
+        pad_inches=0
+    )
     plt.close()
 
+    top_playlists = (
+        df_exploded.groupby("playlist")["playcount"]
+        .sum()
+        .sort_values(ascending=False)
+        .head(5)
+        .to_dict()
+    )
 
-def get_artist_genre_playlist_network_html(df):
+    explanation = {
+        "summary": "Top 5 playlists with the highest total playcounts.",
+        "top_playlists": top_playlists
+    }
+
+    save_plot_explanation(plots_dir, "playcount_distribution", explanation)
+    
+def get_artist_genre_playlist_network_html(df, plots_dir):
     df_exploded = df.explode('genres')
     top_artists = df['artist'].value_counts().head(30).index
     top_genres = df_exploded['genres'].value_counts().head(20).index
@@ -152,11 +175,9 @@ def get_artist_genre_playlist_network_html(df):
     df_filtered = df_filtered[df_filtered['genres'].apply(lambda gs: any(g in top_genres for g in gs))]
     df_exploded_edges = df_filtered.explode('genres')
 
-    # net = Network(height="100vh", width="100%", bgcolor="#E4EBF5", notebook=True,
-    #               cdn_resources='in_line', filter_menu=True, select_menu=True)
     net = Network(height="100vh", 
                   width="100%", 
-                  bgcolor="#E4EBF5", 
+                  bgcolor="rgba(0,0,0,0)",
                   notebook=True,
                   cdn_resources='in_line'
                   )
@@ -183,31 +204,45 @@ def get_artist_genre_playlist_network_html(df):
         if row['genres'] in top_genres and row['playlist'] in top_playlists:
             net.add_edge(row['genres'], row['playlist'], color="#88888850", title="Genre ↔ Playlist")
 
+    explanation = {
+    "summary": "Network shows strongest links between top artists, genres, and playlists.",
+    "top_artists": list(top_artists[:5]),
+    "top_genres": list(top_genres[:5]),
+    "top_playlists": list(top_playlists[:5])
+    }
+    save_plot_explanation(plots_dir, "artist_genre_playlist_network", explanation)
+
+
     network_html = net.generate_html(notebook=False)
+    network_html = network_html.replace('<div class="card" style="width: 100%">', '<div class="card" style="width: 100%; background">')
+    network_html = network_html.replace('<head>', '<head style="background:transparent;')
+    network_html = network_html.replace('<body>', '<body style="background:transparent;')
+    network_html = network_html.replace('<div class="card" style="width: 100%">', '<div class="card" style="width: 100%; background:transparent;">')
+
     return network_html
 
 
 def plot_polar_playcount_playlist(df, plots_dir):
-    min_year, max_year = df['year'].min(), df['year'].max()
+
+    min_year, max_year = int(df['year'].min()), int(df['year'].max())
     angles = 2 * np.pi * (df['year'] - min_year) / (max_year - min_year)
 
     radii = df['playcount']
     sizes = df['playcount'] / df['playcount'].max() * 1000
 
-    # switch to c = colors for accurate genre based coloiring
     top_playlists = df['playlist'].value_counts().head(10).index
     df_plot = df[df['playlist'].isin(top_playlists)]
     playlist_to_color = {pl: i for i, pl in enumerate(top_playlists)}
     colors = df_plot['playlist'].map(playlist_to_color)
 
-    fig = plt.figure(figsize=(6,9), dpi=167, facecolor='#E4EBF5')
-    ax = fig.add_subplot(projection='polar', facecolor='#E4EBF5')
+    fig = plt.figure(figsize=(6, 9), dpi=300, facecolor=None)
+    ax = fig.add_subplot(projection='polar', facecolor=None)
     scatter = ax.scatter(
-        angles, 
-        radii, 
+        angles,
+        radii,
         c=df['playcount'],
-        s=sizes, 
-        cmap='rainbow', 
+        s=sizes,
+        cmap='rainbow',
         alpha=0.3,
         edgecolor='white',
         linewidth=0.0,
@@ -220,37 +255,64 @@ def plot_polar_playcount_playlist(df, plots_dir):
     ax.set_rlabel_position(45)
     ax.grid(False)
     for spine in ax.spines.values():
-        spine.set_color('#E4EBF5')
-
-    
+        spine.set_color(None) 
     num_ticks = min(10, max_year - min_year + 1)
-    theta_ticks = np.linspace(0, 2*np.pi, num_ticks, endpoint=True)[1:]
+    theta_ticks = np.linspace(0, 2 * np.pi, num_ticks, endpoint=True)[1:]
     year_labels = [str(int(y)) for y in np.linspace(min_year, max_year, num_ticks, endpoint=True)][1:]
     ax.set_xticks(theta_ticks)
     ax.set_xticklabels(year_labels, color="#474e5f", fontsize=10)
-    
+
     cbar = fig.colorbar(scatter, ax=ax, orientation='horizontal', pad=0.1)
     cbar.outline.set_visible(False)
     cbar.ax.tick_params(length=0)
     cbar.set_label("Popularity", color="#474e5f")
 
-    plt.savefig(os.path.join(plots_dir, "polar_playcount_playlist.png"))
+    plt.savefig(
+        os.path.join(plots_dir, "polar_playcount_playlist.png"),
+        transparent=True,
+        bbox_inches='tight',
+        pad_inches=0
+    )
     plt.close()
 
+    peak_playcount_idx = df['playcount'].idxmax()
+    peak_year = int(df.loc[peak_playcount_idx, 'year'])
+    top_tracks = (
+        df.sort_values('playcount', ascending=False)
+          .head(5)[['name', 'playcount']]
+          .set_index('name')['playcount']
+          .to_dict()
+    )
 
-def generate_all_user_plots(user_id):
+    summary = (
+        f"Listening history spans from {min_year} to {max_year}, "
+        f"with peak popularity in {peak_year}. "
+        f"Top tracks include {', '.join(list(top_tracks.keys())[:4])}."
+    )
+
+    explanation = {
+        "min_year": min_year,
+        "max_year": max_year,
+        "peak_playcount_year": peak_year,
+        "top_5_tracks": top_tracks,
+        "summary": summary,
+    }
+
+    save_plot_explanation(plots_dir, "polar_playcount_playlist", explanation)
+    
+def generate_all_user_plots():
+    user_id = session.get("user_info").get("id")
     df = load_user_data(user_id)
     current_dir = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.dirname(current_dir)
-    plots_dir = ensure_dir(os.path.join(project_root, "temp", user_id, "plots"))
+
+    plots_dir = os.path.join(project_root, "temp", user_id, "plots")
 
     plot_wordcloud_genres(df, plots_dir)
     plot_wordcloud_artists(df, plots_dir)
     plot_playcount_distribution(df, plots_dir)
-    get_artist_genre_playlist_network_html(df)
+    get_artist_genre_playlist_network_html(df, plots_dir)
     plot_polar_playcount_playlist(df, plots_dir)
 
     print(f"[SUCCESS] All plots saved in {plots_dir}")
 
-# if __name__ == "__main__":
-#     generate_all_user_plots("31i3y3aur3k2mejzzfyuxvulxuoy")

@@ -1,0 +1,24 @@
+<!-- EXPERIMENT CAN BE SAFELY DETLEED -->
+
+<h2>Setting up your account...</h2>
+<pre id="log"></pre>
+
+<script>
+async function fetchLogs() {
+    const logElement = document.getElementById("log");
+    const response = await fetch("/stream_logs");
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+
+    let { value, done } = await reader.read();
+    while (!done) {
+        logElement.textContent += decoder.decode(value);
+        ({ value, done } = await reader.read());
+    }
+
+    // When done, redirect to main page
+    window.location.href = "/";
+}
+
+fetchLogs();
+</script>

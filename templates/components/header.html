@@ -1,0 +1,21 @@
+<button class="dropbtn style btn" id="nav-ham"><i class="ri-menu-line "></i></button>
+
+<div class="dropdown-content style header-toggle">
+    <button class="style btn" id="nav-home" data-url="/home"><i class="ri-home-fill"></i>Home</button>
+    <button class="style btn" id="nav-tracks" data-url="/tracks"><i class="ri-music-2-line"></i>Tracks</button>
+    <button class="style btn" id="nav-data" data-url="/data"><i class="ri-bubble-chart-line"></i>Data</button>
+    <button class="style btn" id="nav-profile" data-url="/profile"><i class="ri-user-line"></i>Profile</button>
+    <div class="header-slider"></div>
+    <button id="theme-btn" class="style btn" onclick="toggleThemeColors()">
+        <i class="ri-contrast-2-line"></i><span>Dark</span>
+    </button>    
+    {% if user %}
+      {% include "components/logout.html" %}
+    {% else %}
+        {% include "components/login.html" %}
+    {% endif %}
+</div>
+
+<a class="logo style btn" href="/">
+    <h1>ECHOSTATS</h1>
+</a>
