@@ -15,6 +15,9 @@
 }
 
 html{
+  display: flex;
+  justify-content: center;
+
   scrollbar-width: none;
   scroll-behavior: smooth;
   transition: all .3s ease;
@@ -743,15 +746,16 @@ main {
   }
 }
 
-
-@media (min-width: 450px) {
-  html{
-    display: flex;
-    justify-content: center;
-
-  }
+@media (max-width: 499px) {
   body {
-    width: 450px;
+    width: 100%;
+    margin: 0 auto;
+  }
+}
+
+@media (min-width: 500px) {
+  body {
+    width: 500px;
     margin: 0 auto;
   }
 }
