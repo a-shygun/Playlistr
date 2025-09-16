@@ -8,7 +8,8 @@ from wordcloud import WordCloud
 from pyvis.network import Network
 from flask import session
 import json
-
+import matplotlib
+matplotlib.use("Agg")  # no GUI windows
 def ensure_dir(path):
     os.makedirs(path, exist_ok=True)
     return path
