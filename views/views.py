@@ -38,52 +38,25 @@ def dashboard():
     user_info = session.get('user_info')
     return render_template("base.html", user=user_info, content="pages/home.html")
 
-# @views_bp.route("/tracks")
-# def tracks():
-#     user_info = session.get("user_info")
-#     top_tracks = recent_tracks = None
-
-#     if user_info:
-#         user_dir = os.path.join("temp", user_info["id"], "datasets")
-#         top_tracks = read_tracks_csv(os.path.join(user_dir, "top_tracks.csv"))
-#         recent_tracks = read_tracks_csv(os.path.join(user_dir, "recent_tracks.csv"))
-
-#     return render_template(
-#         "pages/tracks.html",
-#         user=user_info,
-#         content="pages/tracks.html",
-#         top_tracks=top_tracks,
-#         recent_tracks=recent_tracks
-#     )
- 
- 
- 
- 
- 
-from utils.cache import user_cache
-
 @views_bp.route("/tracks")
 def tracks():
     user_info = session.get("user_info")
-    if not user_info:
-        return redirect(url_for("auth.login"))
+    top_tracks = recent_tracks = None
 
-    cached = user_cache.get(user_info["id"], {})
+    if user_info:
+        user_dir = os.path.join("temp", user_info["id"], "datasets")
+        top_tracks = read_tracks_csv(os.path.join(user_dir, "top_tracks.csv"))
+        recent_tracks = read_tracks_csv(os.path.join(user_dir, "recent_tracks.csv"))
+
     return render_template(
         "pages/tracks.html",
         user=user_info,
         content="pages/tracks.html",
-        top_tracks=cached.get("top_tracks"),
-        recent_tracks=cached.get("recent_tracks"),
+        top_tracks=top_tracks,
+        recent_tracks=recent_tracks
     )
  
- 
- 
- 
- 
- 
- 
-    
+
 @views_bp.route("/home")
 def home():
     user_info = session.get('user_info')
