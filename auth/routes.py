@@ -88,65 +88,6 @@ def callback():
 
     return render_template("loading.html")
 
-# @auth_bp.route("/setup")
-# def setup():
-#     try:
-#         user_info = session.get("user_info")
-#         user_id = user_info.get("id")
-#         user_dir = os.path.join("temp", user_id)
-#         datasets_dir = os.path.join(user_dir, "datasets")
-#         plots_dir = os.path.join(user_dir, "plots")
-
-#         os.makedirs(datasets_dir, exist_ok=True)
-#         os.makedirs(plots_dir, exist_ok=True)
-
-#         if not os.listdir(datasets_dir):
-#             print(f"[DataEDA] Datasets folder empty for user {user_id}, generating CSVs and JSON")
-#             fetch_save_user_tracks()
-#             save_user_info()
-#             fetch_save_top_tracks()
-#             fetch_save_recent_tracks()
-#             enrich_songs_with_lastfm(lastfm_api_key=LASTFM_API_KEY)
-#             enrich_top_recent_with_similar_songs(lastfm_api_key=LASTFM_API_KEY)
-#             print(f"[DataEDA] Datasets created for user {user_id}")
-#         else:
-#             print(f"[DataEDA] Datasets already exist for user {user_id}, skipping generation")
-
-#         if not os.listdir(plots_dir):
-#             print(f"[DataEDA] Plots folder empty for user {user_id}, generating plots")
-#             generate_all_user_plots()
-#             print(f"[DataEDA] Plots created for user {user_id}")
-#         else:
-#             print(f"[DataEDA] Plots already exist for user {user_id}, skipping generation")
-
-#         user_info_file = os.path.join(datasets_dir, "user_info.json")
-#         if os.path.exists(user_info_file):
-#             with open(user_info_file, "r") as f:
-#                 session["user_info"] = json.load(f)
-
-#     except Exception as e:
-#         print(f"[Setup] Error during setup: {e}")
-#         traceback.print_exc()
-#         return f"Setup failed: {e}", 500
-
-#     return redirect("/")
-
-
-from utils.cache import user_cache
-import pandas as pd 
-import ast 
-
-def read_tracks_csv(path):
-    if not os.path.exists(path):
-        return []
-    df = pd.read_csv(path)
-    for col in ["genres", "similar_songs"]:
-        if col in df.columns:
-            df[col] = df[col].apply(lambda x: ast.literal_eval(x) if pd.notna(x) else [])
-
-    return df.to_dict(orient="records")
-
-
 @auth_bp.route("/setup")
 def setup():
     try:
@@ -159,7 +100,6 @@ def setup():
         os.makedirs(datasets_dir, exist_ok=True)
         os.makedirs(plots_dir, exist_ok=True)
 
-        # --- Dataset preparation ---
         if not os.listdir(datasets_dir):
             print(f"[DataEDA] Datasets folder empty for user {user_id}, generating CSVs and JSON")
             fetch_save_user_tracks()
@@ -172,7 +112,6 @@ def setup():
         else:
             print(f"[DataEDA] Datasets already exist for user {user_id}, skipping generation")
 
-        # --- Plots preparation ---
         if not os.listdir(plots_dir):
             print(f"[DataEDA] Plots folder empty for user {user_id}, generating plots")
             generate_all_user_plots()
@@ -180,18 +119,10 @@ def setup():
         else:
             print(f"[DataEDA] Plots already exist for user {user_id}, skipping generation")
 
-        # --- Refresh session user info ---
         user_info_file = os.path.join(datasets_dir, "user_info.json")
         if os.path.exists(user_info_file):
             with open(user_info_file, "r") as f:
                 session["user_info"] = json.load(f)
-
-        # --- Preload datasets into cache ---
-        user_cache[user_id] = {
-            "top_tracks": read_tracks_csv(os.path.join(datasets_dir, "top_tracks.csv")),
-            "recent_tracks": read_tracks_csv(os.path.join(datasets_dir, "recent_tracks.csv")),
-        }
-        print(f"[Cache] Cached top_tracks & recent_tracks for {user_id}")
 
     except Exception as e:
         print(f"[Setup] Error during setup: {e}")
@@ -199,3 +130,72 @@ def setup():
         return f"Setup failed: {e}", 500
 
     return redirect("/")
+
+
+# from utils.cache import user_cache
+# import pandas as pd 
+# import ast 
+
+# def read_tracks_csv(path):
+#     if not os.path.exists(path):
+#         return []
+#     df = pd.read_csv(path)
+#     for col in ["genres", "similar_songs"]:
+#         if col in df.columns:
+#             df[col] = df[col].apply(lambda x: ast.literal_eval(x) if pd.notna(x) else [])
+
+#     return df.to_dict(orient="records")
+
+
+# @auth_bp.route("/setup")
+# def setup():
+#     try:
+#         user_info = session.get("user_info")
+#         user_id = user_info.get("id")
+#         user_dir = os.path.join("temp", user_id)
+#         datasets_dir = os.path.join(user_dir, "datasets")
+#         plots_dir = os.path.join(user_dir, "plots")
+
+#         os.makedirs(datasets_dir, exist_ok=True)
+#         os.makedirs(plots_dir, exist_ok=True)
+
+#         # --- Dataset preparation ---
+#         if not os.listdir(datasets_dir):
+#             print(f"[DataEDA] Datasets folder empty for user {user_id}, generating CSVs and JSON")
+#             fetch_save_user_tracks()
+#             save_user_info()
+#             fetch_save_top_tracks()
+#             fetch_save_recent_tracks()
+#             enrich_songs_with_lastfm(lastfm_api_key=LASTFM_API_KEY)
+#             enrich_top_recent_with_similar_songs(lastfm_api_key=LASTFM_API_KEY)
+#             print(f"[DataEDA] Datasets created for user {user_id}")
+#         else:
+#             print(f"[DataEDA] Datasets already exist for user {user_id}, skipping generation")
+
+#         # --- Plots preparation ---
+#         if not os.listdir(plots_dir):
+#             print(f"[DataEDA] Plots folder empty for user {user_id}, generating plots")
+#             generate_all_user_plots()
+#             print(f"[DataEDA] Plots created for user {user_id}")
+#         else:
+#             print(f"[DataEDA] Plots already exist for user {user_id}, skipping generation")
+
+#         # --- Refresh session user info ---
+#         user_info_file = os.path.join(datasets_dir, "user_info.json")
+#         if os.path.exists(user_info_file):
+#             with open(user_info_file, "r") as f:
+#                 session["user_info"] = json.load(f)
+
+#         # --- Preload datasets into cache ---
+#         user_cache[user_id] = {
+#             "top_tracks": read_tracks_csv(os.path.join(datasets_dir, "top_tracks.csv")),
+#             "recent_tracks": read_tracks_csv(os.path.join(datasets_dir, "recent_tracks.csv")),
+#         }
+#         print(f"[Cache] Cached top_tracks & recent_tracks for {user_id}")
+
+#     except Exception as e:
+#         print(f"[Setup] Error during setup: {e}")
+#         traceback.print_exc()
+#         return f"Setup failed: {e}", 500
+
+#     return redirect("/")
