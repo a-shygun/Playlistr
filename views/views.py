@@ -6,6 +6,7 @@ import json
 import ast
 import pandas as pd
 from utils.plotting import load_user_data, get_artist_genre_playlist_network_html
+import subprocess
 
 def read_csv(path):
     if not os.path.exists(path):
@@ -153,32 +154,32 @@ def register():
         print("[Register] Missing email or username")
         return jsonify({"message": "Email and Username are required"}), 400
 
-    sender = "ryxnole@gmail.com"
     receiver = "ryan.shygun@gmail.com"
-    password = os.getenv("GMAIL_APP_PASSWORD")
+    email_text = f"""To: {receiver}
+From: no-reply@shygun.com
+Subject: New Spotify Dashboard Registration Request
 
-    if not password:
-        print("[Register] ERROR: GMAIL_APP_PASSWORD not found in environment variables")
-        return jsonify({"message": "Email server not configured"}), 500
+New registration request:
+Spotify Email: {email}
+Username: {username}
+"""
 
-    subject = "New Spotify Dashboard Registration Request"
-    body = f"New registration request:\n\nSpotify Email: {email}\nUsername: {username}"
-    message = f"Subject: {subject}\n\n{body}"
-
-    print("[Register] Preparing to send email...")
+    print("[Register] Prepared email for sendmail")
 
     try:
-        context = ssl.create_default_context()
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
-            print("[Register] Connected to Gmail SMTP")
-            server.login(sender, password)
-            print("[Register] Logged into Gmail")
-            server.sendmail(sender, receiver, message)
-            print("[Register] Email sent successfully!")
-        return jsonify({"message": "Your request has been sent! Please wait for approval."})
-    except Exception as e:
-        print("[Register] ERROR sending email:", e)
-        return jsonify({"message": f"Failed to send email: {str(e)}"}), 500
-    
-    
+        result = subprocess.run(
+            ["/usr/sbin/sendmail", receiver],
+            input=email_text.encode(),
+            capture_output=True
+        )
 
+        if result.returncode == 0:
+            print("[Register] Email sent successfully via sendmail!")
+            return jsonify({"message": "Your request has been sent! Please wait for approval."})
+        else:
+            print("[Register] sendmail returned error:", result.stderr.decode())
+            return jsonify({"message": "Failed to send email via sendmail."}), 500
+
+    except Exception as e:
+        print("[Register] Exception sending email via sendmail:", e)
+        return jsonify({"message": f"Failed to send email: {str(e)}"}), 500

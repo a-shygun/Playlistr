@@ -303,7 +303,6 @@ def enrich_songs_with_lastfm(lastfm_api_key, max_workers=8, retry_count=3, backo
     datasets_dir = os.path.join("temp", user_id, "datasets")
     csv_files = ["user_songs.csv", "top_tracks.csv", "recent_tracks.csv"]
 
-    # Load DataFrames
     dfs = {}
     for f in csv_files:
         path = os.path.join(datasets_dir, f)
@@ -339,11 +338,9 @@ def enrich_songs_with_lastfm(lastfm_api_key, max_workers=8, retry_count=3, backo
         artist_cache[artist_name] = ([], 0)
         return [], 0
 
-    # Run in parallel
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         list(executor.map(fetch_artist_info, unique_artists))
 
-    # Enrich each dataframe and save back
     for f, df in dfs.items():
         df["genres"] = df["artist"].map(lambda a: artist_cache.get(a, ([], 0))[0])
         df["playcount"] = df["artist"].map(lambda a: artist_cache.get(a, ([], 0))[1])

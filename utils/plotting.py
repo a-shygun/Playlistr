@@ -9,7 +9,8 @@ from pyvis.network import Network
 from flask import session
 import json
 import matplotlib
-matplotlib.use("Agg")  # no GUI windows
+matplotlib.use("Agg")
+
 def ensure_dir(path):
     os.makedirs(path, exist_ok=True)
     return path
@@ -121,7 +122,6 @@ def plot_wordcloud_artists(df, plots_dir):
 def plot_playcount_distribution(df, plots_dir):
     df_exploded = df.explode('genres')
     
-    # Ensure playcount is numeric
     df_exploded["playcount"] = pd.to_numeric(df_exploded["playcount"], errors="coerce").fillna(0)
     
     log_playcounts = np.log1p(df_exploded["playcount"])
@@ -233,13 +233,10 @@ def plot_polar_playcount_playlist(df, plots_dir):
     top_playlists = df['playlist'].value_counts().head(10).index
     df_plot = df[df['playlist'].isin(top_playlists)].copy()
 
-    # Compute angles and radii for filtered df
-    # Compute angles and radii for filtered df
     angles = 2 * np.pi * (df_plot['year'] - min_year) / (max_year - min_year)
     radii = df_plot['playcount']
     sizes = df_plot['playcount'] / df_plot['playcount'].max() * 1000
 
-    # Convert to float explicitly
     angles = angles.astype(float)
     radii = radii.astype(float)
     sizes = sizes.astype(float)
@@ -255,11 +252,10 @@ def plot_polar_playcount_playlist(df, plots_dir):
     fig = plt.figure(figsize=(6, 9), dpi=300, facecolor=None)
     ax = fig.add_subplot(projection='polar', facecolor=None)
 
-    # Scatter plot
     scatter = ax.scatter(
         angles,
         radii,
-        c=df_plot['playcount'],  # use df_plot
+        c=df_plot['playcount'],
         s=sizes,
         cmap='rainbow',
         alpha=0.3,
@@ -267,7 +263,6 @@ def plot_polar_playcount_playlist(df, plots_dir):
         linewidth=0.0,
     )
 
-    # Set polar plot aesthetics
     ax.set_ylim(-1_000_000, 10_500_000)
     ax.set_rorigin(-5_000_000)
     ax.set_theta_zero_location('N')
