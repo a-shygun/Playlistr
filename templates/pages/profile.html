@@ -1,7 +1,10 @@
 <div class="profile" id="profile-page">
   <div class="profile-header style card">
-      <img src="{{ user.img if user else url_for('static', filename='img/placeholder/avatar_placeholder.png') }}" 
-           alt="Profile Picture">
+      {% if user and user.img %}
+        <img src="{{ user.img }}" alt="Profile Picture">
+      {% else %}
+        <img src="{{ url_for('static', filename='img/placeholder/avatar_placeholder.png') }}" alt="Profile Picture">
+      {% endif %}
       <span class="wave1"></span>
       <span class="wave2"></span>
       <span class="wave3"></span>

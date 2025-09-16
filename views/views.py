@@ -33,7 +33,6 @@ def read_tracks_csv(path):
     return df.to_dict(orient="records")
 
 views_bp = Blueprint('views', __name__)
-
 @views_bp.route("/")
 def dashboard():
     user_info = session.get('user_info')
@@ -119,7 +118,6 @@ def network():
 def user_plots(filename):
     user_info = session.get("user_info")
 
-    # Special case: serve placeholder replica if filename matches
     if filename == "plot_json_placeholder.json":
         placeholder_path = os.path.join("static", "img", "placeholder", "plot_json.json")
         if os.path.exists(placeholder_path):
@@ -127,7 +125,6 @@ def user_plots(filename):
         else:
             return "Placeholder file not found", 404
 
-    # Normal user-specific behavior
     if not user_info or not user_info.get("id"):
         return "User not logged in", 403
 
@@ -139,6 +136,7 @@ def user_plots(filename):
         return "File not found", 404
 
     return send_from_directory(plots_dir, filename)
+
 @views_bp.route("/register", methods=["POST"])
 def register():
     print("[Register] Route hit")

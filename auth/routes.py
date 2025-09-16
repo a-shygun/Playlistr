@@ -5,7 +5,9 @@ import requests
 import shutil
 import os
 import traceback
+import json
 from flask import Blueprint, redirect, request, session, render_template
+from utils.plotting import generate_all_user_plots 
 from .fetch import (fetch_user_info,
                     fetch_save_user_tracks,
                     save_user_info,
@@ -13,8 +15,6 @@ from .fetch import (fetch_user_info,
                     fetch_save_recent_tracks,
                     enrich_songs_with_lastfm,
                     enrich_top_recent_with_similar_songs)
-from utils.plotting import generate_all_user_plots 
-import json
 
 SPOTIPY_CLIENT_ID = os.environ.get("SPOTIPY_CLIENT_ID")
 REDIRECT_URI = os.environ.get("REDIRECT_URI")
@@ -65,7 +65,8 @@ def set_access_token():
 
 @auth_bp.route("/logout")
 def logout():
-    user_id = session.get("user_id")
+    user_info = session.get('user_info')
+    user_id = user_info.get("user_id")
     if user_id:
         try:
             user_dir = os.path.join("temp", user_id)
@@ -76,73 +77,19 @@ def logout():
     session.clear()
     return redirect("/")
 
-
-# @auth_bp.route("/callback")
-# def callback():
-#     try:
-#         set_access_token()
-#         fetch_user_info()
-
-#         user_id = session.get("user_info").get("id")
-#         user_dir = os.path.join("temp", user_id)
-#         datasets_dir = os.path.join(user_dir, "datasets")
-#         plots_dir = os.path.join(user_dir, "plots")
-
-#         os.makedirs(datasets_dir, exist_ok=True)
-#         os.makedirs(plots_dir, exist_ok=True)
-
-#         if not os.listdir(datasets_dir):
-#             print(f"[DataEDA] Datasets folder empty for user {user_id}, generating CSVs and JSON")
-#             fetch_save_user_tracks()
-#             save_user_info()
-#             fetch_save_top_tracks()
-#             fetch_save_recent_tracks()
-#             enrich_songs_with_lastfm(lastfm_api_key=LASTFM_API_KEY)
-#             enrich_top_recent_with_similar_songs(lastfm_api_key=LASTFM_API_KEY)
-#             print(f"[DataEDA] Datasets created for user {user_id}")
-#         else:
-#             print(f"[DataEDA] Datasets already exist for user {user_id}, skipping generation")
-
-#         if not os.listdir(plots_dir):
-#             print(f"[DataEDA] Plots folder empty for user {user_id}, generating plots")
-#             generate_all_user_plots()
-#             print(f"[DataEDA] Plots created for user {user_id}")
-#         else:
-#             print(f"[DataEDA] Plots already exist for user {user_id}, skipping generation")
-
-#     except Exception as e:
-#         print(f"[Auth] Spotify authentication failed: {e}")
-#         traceback.print_exc()
-#         return f"Spotify authentication failed: {e}", 500
-
-#     user_info_file = os.path.join(datasets_dir, "user_info.json")
-#     if os.path.exists(user_info_file):
-#         with open(user_info_file, "r") as f:
-#             session["user_info"] = json.load(f)
-
-#     return redirect("/")
-
-
-
-from flask import Blueprint, render_template, session, redirect, url_for
-import threading, os, json, traceback
 @auth_bp.route("/callback")
 def callback():
     try:
-        # Step 1: Get Spotify token & user info
         set_access_token()
         fetch_user_info()
     except Exception as e:
         traceback.print_exc()
         return f"Spotify authentication failed: {e}", 500
 
-    # Step 2: Redirect to the loading page
-    return render_template("loading.html")  # user sees spinner while setup happens
-
+    return render_template("loading.html")
 
 @auth_bp.route("/setup")
 def setup():
-    """This route does all the heavy lifting and then redirects to /."""
     try:
         user_info = session.get("user_info")
         user_id = user_info.get("id")
@@ -172,7 +119,6 @@ def setup():
         else:
             print(f"[DataEDA] Plots already exist for user {user_id}, skipping generation")
 
-        # Reload user_info from file just in case
         user_info_file = os.path.join(datasets_dir, "user_info.json")
         if os.path.exists(user_info_file):
             with open(user_info_file, "r") as f:
@@ -183,5 +129,4 @@ def setup():
         traceback.print_exc()
         return f"Setup failed: {e}", 500
 
-    # Step 3: Redirect to main page
     return redirect("/")
