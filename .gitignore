@@ -2,12 +2,12 @@ venv/
 .DS_Store
 .DS_Store
 .idea/
-
+.vscode/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
-
+temp/
 # C extensions
 *.so
 
